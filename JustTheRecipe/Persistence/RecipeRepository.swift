@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 
 // MARK: - Recipe Repository
 // Handles all persistence operations for recipes.
