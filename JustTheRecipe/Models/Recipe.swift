@@ -104,4 +104,22 @@ extension Recipe {
         let parts = [title] + ingredients
         return parts.joined(separator: " ").lowercased()
     }
+    
+    /// Create a RecipeDraft from this Recipe (for re-editing or duplication)
+    func toRecipeDraft() -> RecipeDraft {
+        RecipeDraft(
+            id: UUID(),  // New ID for draft
+            title: title,
+            sourceURL: sourceURL,
+            sourceDomain: sourceDomain,
+            imageURL: imageURL,
+            servings: servings,
+            totalTime: totalTime,
+            ingredients: ingredients,
+            instructions: instructions,
+            notes: notes,
+            rawHTML: rawHTML,
+            extractionConfidence: .manual
+        )
+    }
 }

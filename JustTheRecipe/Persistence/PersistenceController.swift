@@ -37,6 +37,12 @@ struct PersistenceController {
     /// The configured model container
     let container: ModelContainer
     
+    /// Whether the container initialized successfully
+    let isHealthy: Bool
+    
+    /// Error if initialization failed
+    let initializationError: Error?
+    
     init(inMemory: Bool = false) {
         let schema = Schema([Recipe.self])
         
@@ -52,11 +58,69 @@ struct PersistenceController {
                 migrationPlan: RecipeMigrationPlan.self,
                 configurations: [configuration]
             )
+            isHealthy = true
+            initializationError = nil
         } catch {
-            // DECISION: Crash on container failure - unrecoverable state
-            // In production, could show alert and offer data reset
-            fatalError("Failed to initialize ModelContainer: \(error)")
+            // Create in-memory fallback instead of crashing
+            // User can still use app but data won't persist
+            AppLogger.persistenceError("Failed to initialize persistent storage, using in-memory fallback", error: error)
+            
+            let fallbackConfig = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: true,
+                allowsSave: true
+            )
+            
+            // This should always succeed for in-memory
+            container = try! ModelContainer(
+                for: schema,
+                configurations: [fallbackConfig]
+            )
+            isHealthy = false
+            initializationError = error
         }
+    }
+    
+    /// Check if persistence is working properly
+    @MainActor
+    func validatePersistence() -> Bool {
+        let context = container.mainContext
+        
+        // Try a simple fetch
+        let descriptor = FetchDescriptor<Recipe>()
+        do {
+            _ = try context.fetch(descriptor)
+            return true
+        } catch {
+            AppLogger.persistenceError("Persistence validation failed", error: error)
+            return false
+        }
+    }
+    
+    /// Get the database file URL (for debugging)
+    var databaseURL: URL? {
+        container.configurations.first?.url
+    }
+    
+    /// Get database size in bytes
+    var databaseSize: Int64? {
+        guard let url = databaseURL else { return nil }
+        
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            return attributes[.size] as? Int64
+        } catch {
+            return nil
+        }
+    }
+    
+    /// Formatted database size string
+    var formattedDatabaseSize: String {
+        guard let size = databaseSize else { return "Unknown" }
+        
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: size)
     }
     
     /// Preview/testing container with sample data
@@ -77,7 +141,7 @@ struct PersistenceController {
                 "1 lb spaghetti",
                 "2 cans crushed tomatoes",
                 "4 cloves garlic, minced",
-                "1/4 cup olive oil",
+                "¼ cup olive oil",
                 "Fresh basil",
                 "Salt and pepper to taste"
             ],

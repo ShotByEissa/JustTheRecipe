@@ -17,4 +17,3 @@ struct ContentView: View {
     ContentView()
         .modelContainer(PersistenceController.preview.container)
 }
-// some changes to send to Git
