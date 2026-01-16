@@ -3,7 +3,9 @@ import Network
 
 // MARK: - Network Monitor
 // Simple network reachability monitor for pre-flight checks.
+// MainActor-isolated for thread-safe UI access.
 
+@MainActor
 @Observable
 final class NetworkMonitor {
     
@@ -19,7 +21,7 @@ final class NetworkMonitor {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "NetworkMonitor")
     
-    enum ConnectionType {
+    enum ConnectionType: Sendable {
         case wifi
         case cellular
         case wired
@@ -32,15 +34,19 @@ final class NetworkMonitor {
     
     private func startMonitoring() {
         monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
-                self?.isConnected = path.status == .satisfied
-                self?.connectionType = self?.getConnectionType(path) ?? .unknown
+            let isConnected = path.status == .satisfied
+            let connectionType = NetworkMonitor.getConnectionType(path)
+            
+            Task { @MainActor in
+                self?.isConnected = isConnected
+                self?.connectionType = connectionType
             }
         }
         monitor.start(queue: queue)
     }
     
-    private func getConnectionType(_ path: NWPath) -> ConnectionType {
+    /// Determine connection type from path - nonisolated for background queue access
+    nonisolated private static func getConnectionType(_ path: NWPath) -> ConnectionType {
         if path.usesInterfaceType(.wifi) {
             return .wifi
         } else if path.usesInterfaceType(.cellular) {

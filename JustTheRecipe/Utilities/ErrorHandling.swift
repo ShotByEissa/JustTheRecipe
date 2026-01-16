@@ -104,10 +104,8 @@ enum AppError: LocalizedError, Equatable {
             return .noInternet
         case .serverError(let code):
             return .serverError(code)
-        case .redirectLoop:
+        case .redirectLoop, .tooManyRedirects:
             return .networkError("Too many redirects.")
-        case .responseTooLarge:
-            return .contentTooLarge
         default:
             return .networkError(error.localizedDescription)
         }

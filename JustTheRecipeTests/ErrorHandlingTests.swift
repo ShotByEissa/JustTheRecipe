@@ -9,7 +9,13 @@ final class ErrorHandlingTests: XCTestCase {
         XCTAssertEqual(AppError.from(.timeout), .networkTimeout)
         XCTAssertEqual(AppError.from(.noInternet), .noInternet)
         XCTAssertEqual(AppError.from(.serverError(500)), .serverError(500))
-        XCTAssertEqual(AppError.from(.responseTooLarge), .contentTooLarge)
+        
+        // redirectLoop maps to networkError (can't easily compare associated values)
+        if case .networkError = AppError.from(.redirectLoop) {
+            // Expected
+        } else {
+            XCTFail("Expected .networkError for redirectLoop")
+        }
     }
     
     func testAppErrorFromExtractionError() {
