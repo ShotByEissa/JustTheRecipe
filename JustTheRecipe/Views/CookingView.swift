@@ -218,7 +218,7 @@ struct CookingView: View {
         } else if index == currentStep {
             return .accentColor
         } else {
-            return .fill.tertiary
+            return Color(uiColor: .tertiarySystemFill)
         }
     }
     
