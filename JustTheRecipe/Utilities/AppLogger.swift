@@ -1,5 +1,5 @@
 import Foundation
-import os.log
+import os
 
 // MARK: - App Logger
 // Simple logging wrapper for debug and error output.

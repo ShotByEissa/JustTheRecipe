@@ -72,10 +72,15 @@ struct PersistenceController {
             )
             
             // This should always succeed for in-memory
-            container = try! ModelContainer(
-                for: schema,
-                configurations: [fallbackConfig]
-            )
+            // If even in-memory storage fails, the app cannot function
+            do {
+                container = try ModelContainer(
+                    for: schema,
+                    configurations: [fallbackConfig]
+                )
+            } catch {
+                fatalError("Failed to create in-memory fallback storage. This is a critical system failure: \(error)")
+            }
             isHealthy = false
             initializationError = error
         }

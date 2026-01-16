@@ -8,13 +8,13 @@ final class PersistenceTests: XCTestCase {
     var context: ModelContext!
     
     @MainActor
-    override func setUp() {
-        super.setUp()
-        
+    override func setUp() throws {
+        try super.setUp()
+
         // Create in-memory container for testing
         let schema = Schema([Recipe.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        container = try! ModelContainer(for: schema, configurations: [config])
+        container = try ModelContainer(for: schema, configurations: [config])
         context = container.mainContext
     }
     
