@@ -6,7 +6,7 @@ import Foundation
 // Observable for SwiftUI binding during editing.
 
 @Observable
-final class RecipeDraft: Identifiable {
+final class RecipeDraft: Identifiable, @unchecked Sendable {
     // MARK: - Identity
     var id: UUID
     

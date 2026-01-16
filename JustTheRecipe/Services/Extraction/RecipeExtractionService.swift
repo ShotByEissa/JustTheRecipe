@@ -24,9 +24,8 @@ actor RecipeExtractionService {
         sourceURL: URL,
         normalize: Bool = true
     ) async throws -> RecipeDraft {
-        var draft: RecipeDraft
-        
         // Try JSON-LD first (highest confidence)
+        let draft: RecipeDraft
         if var jsonLDDraft = JSONLDParser.parse(html: html) {
             jsonLDDraft.sourceURL = sourceURL.absoluteString
             jsonLDDraft.sourceDomain = URLValidator.extractDomain(from: sourceURL)
@@ -42,12 +41,12 @@ actor RecipeExtractionService {
         else {
             throw ExtractionServiceError.noRecipeFound
         }
-        
+
         // Apply normalization if requested
         if normalize {
-            draft = try await NormalizationService.shared.normalize(draft)
+            return try await NormalizationService.shared.normalize(draft)
         }
-        
+
         return draft
     }
     
